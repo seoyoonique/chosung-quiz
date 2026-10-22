@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>초성 퀴즈</title>
+  <meta name="description" content="초성만 보고 단어를 맞히는 한국어 퀴즈 게임">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -308,11 +309,11 @@
   <div class="hint-box" id="hint-box"></div>
   <div class="input-row">
     <input type="text" id="answer-input" placeholder="정답을 입력하세요" autocomplete="off" autocorrect="off" spellcheck="false">
-    <button id="btn-submit">확인</button>
+    <button type="button" id="btn-submit">확인</button>
   </div>
   <div class="action-row">
-    <button id="btn-hint">💡 힌트 (-5점)</button>
-    <button id="btn-skip">⏭ 건너뛰기</button>
+    <button type="button" id="btn-hint">💡 힌트 (-5점)</button>
+    <button type="button" id="btn-skip">⏭ 건너뛰기</button>
   </div>
   <div class="feedback" id="feedback"></div>
 </div>
@@ -403,6 +404,8 @@ const ALL_WORDS = [
 const TOTAL_ROUNDS = 10;
 
 let questions, currentIdx, score, streak, maxStreak, correctCount, hintUsed;
+// 정답·건너뛰기 후 다음 문제로 넘어가기 전까지 입력을 막아 중복 처리를 방지
+let answered;
 
 function shuffle(arr) {
   const a = [...arr];
@@ -427,6 +430,7 @@ function initGame() {
 
 function loadQuestion() {
   hintUsed = false;
+  answered = false;
   const q = questions[currentIdx];
   const chosung = getChosung(q.word);
   const syllables = [...q.word].length;
@@ -483,9 +487,10 @@ function checkAnswer() {
   const q = questions[currentIdx];
   const input = document.getElementById('answer-input');
   const answer = normalize(input.value);
-  if (!answer) return;
+  if (!answer || answered) return;
 
   if (answer === normalize(q.word)) {
+    answered = true;
     const points = hintUsed ? 5 : 10;
     score += points;
     streak++;
@@ -541,7 +546,7 @@ document.getElementById('answer-input').addEventListener('keydown', e => {
 });
 
 document.getElementById('btn-hint').addEventListener('click', () => {
-  if (hintUsed) return;
+  if (hintUsed || answered) return;
   hintUsed = true;
   const q = questions[currentIdx];
   document.getElementById('hint-box').textContent = `힌트: ${q.hint}`;
@@ -550,6 +555,8 @@ document.getElementById('btn-hint').addEventListener('click', () => {
 });
 
 document.getElementById('btn-skip').addEventListener('click', () => {
+  if (answered) return;
+  answered = true;
   streak = 0;
   document.getElementById('streak-val').textContent = streak;
   const q = questions[currentIdx];
